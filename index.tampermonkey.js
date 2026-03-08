@@ -411,22 +411,27 @@
                 const img = selectStekkieImage(n);
                 const iframe = document.createElement('iframe');
                 iframe.src = `https://shademap.app/@${locations[i].lat},${locations[i].lng},16z,44880000t,0b,0p,0m,q${btoa(getAddress(n))}!${locations[i].lat}!${locations[i].lng}`;
-                iframe.style.cssText = img.style.cssText;
-                iframe.className = img.className;
-                iframe.style.height = '400px';
-                iframe.style.width = '100%';
+                //iframe.style.cssText = img.style.cssText;
+                //iframe.className = img.className;
+                //iframe.style.height = '400px';
+                //iframe.style.width = '100%';
+                iframe.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:85%;z-index:20;border:none;';
+                selectStekkie(n).style.position = 'relative';
+
                 let showingSun = false;
                 clickToSun.addEventListener('click', (e) => {
                     e.preventDefault();
                     if (showingSun) {
                         startStekkieUpdate();
-                        iframe.replaceWith(img);
+                        //iframe.replaceWith(img);
+                        iframe.remove();
                         clickToSun.innerText = 'Check 🌞';
                         showingSun = !showingSun;
                         setTimeout(stopStekkieUpdate, 0);
                     } else {
                         startStekkieUpdate();
-                        img.replaceWith(iframe);
+                        //img.replaceWith(iframe);
+                        selectStekkie(n).appendChild(iframe);
                         clickToSun.innerText = 'Close 🌞';
                         showingSun = !showingSun;
                         setTimeout(stopStekkieUpdate, 0);
