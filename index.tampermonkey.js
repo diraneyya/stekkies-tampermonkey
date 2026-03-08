@@ -8,6 +8,8 @@
 // @icon         https://www.stekkies.com/static/roomraider/img/favicon.png
 // @require      https://unpkg.com/leaflet@1.9.4/dist/leaflet.js
 // @resource     leafletCSS https://unpkg.com/leaflet@1.9.4/dist/leaflet.css
+// @updateURL    https://diraneyya.github.io/stekkies-tampermonkey/index.tampermonkey.js
+// @downloadURL  https://diraneyya.github.io/stekkies-tampermonkey/index.tampermonkey.js
 // @connect      maps.googleapis.com
 // @grant        GM_xmlhttpRequest
 // @grant        GM_setValue
@@ -17,10 +19,10 @@
 // @run-at       document-start
 // ==/UserScript==
 
-await (async function() {
+(async function() {
     'use strict';
 
-    let MAPS_API_KEY = GM_getValue('googleMapsApiKey', '');;
+    let MAPS_API_KEY = GM_getValue('googleMapsApiKey', '');
     if (!MAPS_API_KEY) {
         MAPS_API_KEY = prompt('Enter your Google Maps API key:');
         GM_setValue('googleMapsApiKey', MAPS_API_KEY);
@@ -78,7 +80,7 @@ await (async function() {
     selectAddressPriceContainer(n)?.querySelector(':scope > div > span')?.innerText;
     const getPrice = n =>
     selectAddressPriceContainer(n)?.querySelector(':scope > span')
-    ?.innerText?.replace(/[^0-9.]/,'');
+    ?.innerText?.replace(/[^0-9.]/g,'');
     const getNumberRooms = n =>
     selectRoomAreaPortalContainer(n)?.querySelector(
         ':scope > div:nth-child(1)'
@@ -97,7 +99,7 @@ await (async function() {
     )?.href;
 
     const getTags = n => Array.from(
-        selectTagsContainer(n).querySelectorAll(':scope > span')
+        selectTagsContainer(n)?.querySelectorAll(':scope > span') ?? []
     ).map(e => e.innerText);
 
     async function fetchDirectionsAPIResponse(homeLocation, bicycle = false) {
@@ -192,7 +194,7 @@ await (async function() {
             } catch (error) {
                 // do nothing
                 console.error('❌ failed to investigate cyclability for home address');
-                console.error(`(exception caught: ${error?.toUpperCase() ?? 'UNKNOWN'})`);
+                console.error(`(exception caught: ${String(error).toUpperCase()})`);
             }
         }
         // The type of public transport along with the time it takes on the transport in minutes
@@ -259,32 +261,6 @@ await (async function() {
             console.error(error)
             return { success: false, error }
         }
-    }
-
-    function disablePageFeatures() {
-        // Disable analytics and the click to match handler
-        if (window.goToMatch) { delete window.goToMatch; }
-        Object.defineProperty(window, 'goToMatch', {
-            value: function(event, url) {
-                event.preventDefault();
-                event.stopPropagation();
-            },
-            writable: false,
-            deletable: false,
-            configurable: false,
-        });
-        Object.freeze(window.goToMatch);
-
-        if (window.posthog) { delete window.posthog; }
-        Object.defineProperty(window, 'posthog', {
-            value: { init: () => {}, capture: () => {}, identify: () => {} },
-            writable: false,
-            deletable: false,
-            configurable: false,
-        });
-        Object.freeze(window.posthog);
-
-        console.log('🔐🚨 Disabled page features');
     }
 
     async function rankStekkies() {
@@ -382,7 +358,7 @@ await (async function() {
         const bounds = L.latLngBounds(locations.map(loc => [loc.lat, loc.lng]));
         map.fitBounds(bounds, { padding: [20, 20] });
 
-        for (const i in locations) {
+        for (let i = 0; i < locations.length; i++) {
             if (i > 0) {
                 const n = i - 1;
                 const viewButton = selectStekkieViewButton(n)
