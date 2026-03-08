@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Rank Stekkies
 // @namespace    https://orwa.tech/
-// @version      0.0.2
+// @version      0.0.3
 // @description  Add ranking to stekkies
 // @author       Orwa Diraneyya
 // @match        https://www.stekkies.com/en/profiles/matches/*
@@ -128,10 +128,20 @@
             const response = await gmFetch(
                 `${DIRECTIONS_ENDPOINT}?${new URLSearchParams(params)}`
             );
-            // console.debug(response);
+            if (response?.status === 'REQUEST_DENIED') {
+                GM_setValue('googleMapsApiKey', '');
+                const newKey = prompt('Google Maps API key is invalid or expired. Enter a new API key:');
+                if (newKey) {
+                    GM_setValue('googleMapsApiKey', newKey);
+                    MAPS_API_KEY = newKey;
+                    params.key = newKey;
+                    return await gmFetch(`${DIRECTIONS_ENDPOINT}?${new URLSearchParams(params)}`);
+                }
+                throw 'API key rejected and no new key provided';
+            }
             return response;
-        } catch {
-            throw `error fetching g directions from Google`;
+        } catch (e) {
+            throw e || 'error fetching directions from Google';
         }
     }
 
