@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Rank Stekkies
 // @namespace    https://orwa.tech/
-// @version      2026-03-05
+// @version      0.0.2
 // @description  Add ranking to stekkies
 // @author       Orwa Diraneyya
 // @match        https://www.stekkies.com/en/profiles/matches/*
@@ -344,7 +344,7 @@
 
         const map = L.map('map', {
             dragging: false,
-            touchZoom: true,
+            touchZoom: false,
             scrollWheelZoom: false,
         });
         L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -352,8 +352,8 @@
         }).addTo(map);
 
         const markers = locations.map((loc, i) =>
-                                      L.marker([loc.lat, loc.lng]).bindPopup(loc.label, { autoClose: i !== 0 , closeOnClick: i !== 0  }).addTo(map)
-                                     );
+            L.marker([loc.lat, loc.lng]).bindPopup(loc.label, { autoClose: i !== 0 , closeOnClick: i !== 0  }).addTo(map)
+        );
 
         const bounds = L.latLngBounds(locations.map(loc => [loc.lat, loc.lng]));
         map.fitBounds(bounds, { padding: [20, 20] });
@@ -386,7 +386,7 @@
                 clickToSun.classList.remove('btn-primary')
                 clickToSun.classList.add('btn-secondary')
                 clickToSun.style.filter = ''
-                clickToSun.href = `https://shademap.app/@${locations[i].lat},${locations[i].lng}z,44880000t,0b,0p,0m`
+                clickToSun.href = `https://shademap.app/@${locations[i].lat},${locations[i].lng},16z,44880000t,0b,0p,0m,q${btoa(getAddress(n))}!${locations[i].lat}!${locations[i].lng}`
                 clickToSun.innerText = 'Check 🌞';
 
                 //selectStekkieViewButton(n).before(clickToMap);
