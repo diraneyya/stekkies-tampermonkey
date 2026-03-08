@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Rank Stekkies
 // @namespace    https://orwa.tech/
-// @version      0.0.3
+// @version      0.0.4
 // @description  Add ranking to stekkies
 // @author       Orwa Diraneyya
 // @match        https://www.stekkies.com/en/profiles/matches/*
@@ -59,6 +59,10 @@
     const selectStekkieViewButton = n =>
     selectStekkie(n)?.querySelector(
             ':scope > div.px-2.flex-1.pr-\\[12px\\].pl-\\[12px\\].pb-\\[12px\\].flex.flex-col > div a:last-child'
+    );
+    const selectStekkieImage = n =>
+    selectStekkie(n)?.querySelector(
+            ':scope > div.flex.flex-col.h-full.lg\\:cursor-pointer > img'
     );
     const selectStekkieContainer = n =>
     selectStekkie(n)?.querySelector(
@@ -273,7 +277,7 @@
         }
     }
 
-    async function rankStekkies() {
+    async function rankStekkies(startStekkieUpdate, stopStekkieUpdate) {
         let stekkie = null;
         const locations = [
             { lat: 52.33940589194694, lng:  4.855638496834149, label: 'Uber' }
@@ -352,19 +356,22 @@
         mapDiv.className = 'lg:col-span-4';
         selectStekkiesContainer().before(mapDiv);
 
+        // eslint-disable-next-line no-undef
         const map = L.map('map', {
             dragging: false,
             touchZoom: false,
             scrollWheelZoom: false,
         });
+        // eslint-disable-next-line no-undef
         L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap',
         }).addTo(map);
 
-        const markers = locations.map((loc, i) =>
-            L.marker([loc.lat, loc.lng]).bindPopup(loc.label, { autoClose: i !== 0 , closeOnClick: i !== 0  }).addTo(map)
-        );
+        // eslint-disable-next-line no-undef
+        const markers = locations.map((loc, i) => L.marker(
+            [loc.lat, loc.lng]).bindPopup(loc.label, { autoClose: i !== 0 , closeOnClick: i !== 0 }).addTo(map));
 
+        // eslint-disable-next-line no-undef
         const bounds = L.latLngBounds(locations.map(loc => [loc.lat, loc.lng]));
         map.fitBounds(bounds, { padding: [20, 20] });
 
@@ -396,8 +403,35 @@
                 clickToSun.classList.remove('btn-primary')
                 clickToSun.classList.add('btn-secondary')
                 clickToSun.style.filter = ''
-                clickToSun.href = `https://shademap.app/@${locations[i].lat},${locations[i].lng},16z,44880000t,0b,0p,0m,q${btoa(getAddress(n))}!${locations[i].lat}!${locations[i].lng}`
+                clickToSun.removeAttribute('href');
+                clickToSun.removeAttribute('target');
+                //clickToSun.href = `https://shademap.app/@${locations[i].lat},${locations[i].lng},16z,44880000t,0b,0p,0m,q${btoa(getAddress(n))}!${locations[i].lat}!${locations[i].lng}`
                 clickToSun.innerText = 'Check 🌞';
+
+                const img = selectStekkieImage(n);
+                const iframe = document.createElement('iframe');
+                iframe.src = `https://shademap.app/@${locations[i].lat},${locations[i].lng},16z,44880000t,0b,0p,0m,q${btoa(getAddress(n))}!${locations[i].lat}!${locations[i].lng}`;
+                iframe.style.cssText = img.style.cssText;
+                iframe.className = img.className;
+                iframe.style.height = '400px';
+                iframe.style.width = '100%';
+                let showingSun = false;
+                clickToSun.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (showingSun) {
+                        startStekkieUpdate();
+                        iframe.replaceWith(img);
+                        clickToSun.innerText = 'Check 🌞';
+                        showingSun = !showingSun;
+                        setTimeout(stopStekkieUpdate, 0);
+                    } else {
+                        startStekkieUpdate();
+                        img.replaceWith(iframe);
+                        clickToSun.innerText = 'Close 🌞';
+                        showingSun = !showingSun;
+                        setTimeout(stopStekkieUpdate, 0);
+                    }
+                });
 
                 //selectStekkieViewButton(n).before(clickToMap);
                 const wrapper = document.createElement('div');
@@ -448,6 +482,10 @@
     console.log('🔐🚨 Disabled page features before loading');
 
     // PROCEDURAL AFTER LOADING PAGE
+    let isRanking = false;
+    const startStekkieUpdate = () => { isRanking = true; }
+    const stopStekkieUpdate = () => { isRanking = false; }
+
     document.addEventListener('DOMContentLoaded', async () => {
         GM_addStyle(GM_getResourceText('leafletCSS'));
         // This fixes an issue where these icons are referenced to the same domain (stekkies.com) which we do not own
@@ -460,7 +498,6 @@
         //await rankStekkies();
 
         // update stekkies after page refreshes and other app events
-        let isRanking = false;
         let debounceTimer;
 
         const observer = new MutationObserver(() => {
@@ -472,9 +509,9 @@
             container.style.pointerEvents = 'none';
 
             debounceTimer = setTimeout(async () => {
-                isRanking = true;
-                await rankStekkies();
-                isRanking = false;
+                startStekkieUpdate();
+                await rankStekkies(startStekkieUpdate, stopStekkieUpdate);
+                stopStekkieUpdate();
                 container.style.opacity = '1';
                 container.style.pointerEvents = 'auto';
             }, 200);
