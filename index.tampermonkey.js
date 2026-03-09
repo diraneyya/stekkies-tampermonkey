@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Rank Stekkies
 // @namespace    https://orwa.tech/
-// @version      0.0.4
+// @version      0.0.5
 // @description  Add ranking to stekkies
 // @author       Orwa Diraneyya
 // @match        https://www.stekkies.com/en/profiles/matches/*
@@ -22,10 +22,11 @@
 (async function() {
     'use strict';
 
-    let MAPS_API_KEY = GM_getValue('googleMapsApiKey', '');
+    const MAPS_API_KEY_STORE_MNEMONIC = 'googleMapsApiKey';
+    let MAPS_API_KEY = GM_getValue(MAPS_API_KEY_STORE_MNEMONIC, '');
     if (!MAPS_API_KEY) {
         MAPS_API_KEY = prompt('Enter your Google Maps API key:');
-        GM_setValue('googleMapsApiKey', MAPS_API_KEY);
+        GM_setValue(MAPS_API_KEY_STORE_MNEMONIC, MAPS_API_KEY);
     }
     if (!MAPS_API_KEY) {
         console.info(`🤖 Stekkies UI improvement did not load. Need an API key`);
@@ -133,10 +134,10 @@
                 `${DIRECTIONS_ENDPOINT}?${new URLSearchParams(params)}`
             );
             if (response?.status === 'REQUEST_DENIED') {
-                GM_setValue('googleMapsApiKey', '');
+                GM_setValue(MAPS_API_KEY_STORE_MNEMONIC, '');
                 const newKey = prompt('Google Maps API key is invalid or expired. Enter a new API key:');
                 if (newKey) {
-                    GM_setValue('googleMapsApiKey', newKey);
+                    GM_setValue(MAPS_API_KEY_STORE_MNEMONIC, newKey);
                     MAPS_API_KEY = newKey;
                     params.key = newKey;
                     return await gmFetch(`${DIRECTIONS_ENDPOINT}?${new URLSearchParams(params)}`);
