@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Rank Stekkies
 // @namespace    https://orwa.tech/
-// @version      0.0.6
+// @version      0.0.7
 // @description  Add ranking to stekkies
 // @author       Orwa Diraneyya
 // @match        https://www.stekkies.com/en/profiles/matches/*
@@ -22,7 +22,7 @@
 (async function() {
     'use strict';
 
-    const MAPS_API_KEY_STORE_MNEMONIC = 'googleMapsApiKey2';
+    const MAPS_API_KEY_STORE_MNEMONIC = 'googleMapsApiKey';
     let MAPS_API_KEY = GM_getValue(MAPS_API_KEY_STORE_MNEMONIC, '');
     if (!MAPS_API_KEY) {
         MAPS_API_KEY = prompt('Enter your Google Maps API key:');
